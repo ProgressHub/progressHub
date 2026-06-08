@@ -15,7 +15,7 @@ const STRENGTH_LABELS = ['Too short', 'Weak', 'Okay', 'Strong', 'Excellent'];
 export default function Register() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
-  const [name, setName] = useState('');
+  const [full_name, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -37,7 +37,7 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      const { error } = await signUp({ email, password, options: { data: { name, role } } });
+      const { error } = await signUp(full_name, email, password, role);
       if (error) throw error;
       navigate('/');
     } catch (err) {

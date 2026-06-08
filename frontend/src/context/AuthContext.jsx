@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../services/supabase'
+import { supabase } from '../lib/supabaseClient'
 
 const AuthContext = createContext({})
 
@@ -26,11 +26,18 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signUp = async (email, password, role) => {
+  const signUp = async (full_name, email, password, role) => {
+    console.log(JSON.stringify({ email, password }));
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { role } }
+      options: {
+        data: {
+          full_name,
+          role
+        }
+      }
     })
     return { data, error }
   }
