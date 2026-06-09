@@ -86,8 +86,10 @@ body {
 .auth-form-wrap  { left: 50%; transform: translateX(0); }
 
 /* register: panel slides right, form slides left */
-.auth-split[data-mode="register"] .auth-panel     { transform: translateX(100%); }
-.auth-split[data-mode="register"] .auth-form-wrap { transform: translateX(-100%); }
+.auth-split[data-mode="register"] .auth-panel,
+.auth-split[data-mode="register"] .auth-form-wrap {
+  transform: none;
+}
 
 /* =========================================================
    Brand panel — gradient + grain + floating shapes

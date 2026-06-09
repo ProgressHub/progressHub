@@ -16,9 +16,9 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const { error } = await signIn({ email, password });
+      const { error } = await signIn(email, password);
       if (error) throw error;
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Could not sign in.');
       setShakeKey((k) => k + 1);

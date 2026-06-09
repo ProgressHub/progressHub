@@ -27,8 +27,6 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const signUp = async (full_name, email, password, role) => {
-    console.log(JSON.stringify({ email, password }));
-
     const { data, error } = await supabase.auth.signUp({
       email,
       password,

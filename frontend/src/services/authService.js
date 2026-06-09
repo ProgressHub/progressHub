@@ -1,3 +1,5 @@
+import { supabase } from '../lib/supabaseClient';
+
 export const getUserProfile = async () => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

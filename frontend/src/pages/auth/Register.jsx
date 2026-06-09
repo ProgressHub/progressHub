@@ -30,6 +30,17 @@ export default function Register() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
+     
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (strength < 3) {
+      setError('Please choose a stronger password');
+      return;
+    }
+    
     if (password !== confirm) {
       setError('Passwords do not match.');
       setShakeKey((k) => k + 1);
@@ -39,6 +50,13 @@ export default function Register() {
     try {
       const { error } = await signUp(full_name, email, password, role);
       if (error) throw error;
+
+      if (data?.user?.identities?.length === 0) {
+        setError('Please check your email to confirm your account before logging in.');
+        setLoading(false);
+        return;
+      }
+      
       navigate('/');
     } catch (err) {
       setError(err.message || 'Could not create account.');
@@ -67,7 +85,7 @@ export default function Register() {
 
       <div className="field">
         <input className="input-fancy" id="reg-name" type="text" autoComplete="name"
-          placeholder=" " value={name} onChange={(e) => setName(e.target.value)} required />
+          placeholder=" " value={full_name} onChange={(e) => setFullName(e.target.value)} required />
         <label htmlFor="reg-name">Full name</label>
       </div>
 
