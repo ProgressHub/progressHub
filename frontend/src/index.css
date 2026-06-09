@@ -480,3 +480,60 @@ h1.auth-title {
     animation: none !important;
   }
 }
+
+/* =========================================================
+   Google Sign-In Button + Divider
+   ========================================================= */
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px 18px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-600);
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 200ms var(--ease-out),
+              border-color 200ms var(--ease-out),
+              box-shadow 200ms var(--ease-out),
+              transform 180ms var(--ease-out);
+}
+.google-btn:hover {
+  background: var(--cream-100);
+  border-color: var(--indigo-300);
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-1px);
+}
+.google-btn:active {
+  transform: translateY(0);
+}
+.google-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  color: var(--ink-400);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
