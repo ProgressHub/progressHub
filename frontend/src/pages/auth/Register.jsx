@@ -9,7 +9,7 @@ function strengthOf(pw) {
   if (/[A-Z]/.test(pw)) score++;
   if (/[0-9]/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
-  return score; // 0..4
+  return score;
 }
 const STRENGTH_LABELS = ['Too short', 'Weak', 'Okay', 'Strong', 'Excellent'];
 
@@ -48,9 +48,10 @@ export default function Register() {
       setShakeKey((k) => k + 1);
       return;
     }
+
     setLoading(true);
     try {
-      const { error } = await signUp(full_name, email, password, role);
+      const { data, error } = await signUp(full_name, email, password, role);
       if (error) throw error;
 
       if (data?.user?.identities?.length === 0) {
@@ -94,11 +95,17 @@ export default function Register() {
 
       <div className="role-row">
         <button type="button" className="role-btn" aria-pressed={role === 'student'} onClick={() => setRole('student')}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m2 10 10-5 10 5-10 5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m2 10 10-5 10 5-10 5z"/>
+            <path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/>
+          </svg>
           I'm a Student
         </button>
         <button type="button" className="role-btn" aria-pressed={role === 'teacher'} onClick={() => setRole('teacher')}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 18v2M21 18v2M8 22h8"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="14" rx="2"/>
+            <path d="M3 18v2M21 18v2M8 22h8"/>
+          </svg>
           I'm a Teacher
         </button>
       </div>
