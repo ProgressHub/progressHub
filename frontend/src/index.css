@@ -456,32 +456,6 @@ h1.auth-title {
 .check-svg { width: 30px; height: 30px; fill: none; stroke: var(--white); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 
 /* =========================================================
-   Responsive — collapse to single column
-   ========================================================= */
-@media (max-width: 900px) {
-  .auth-panel,
-  .auth-form-wrap {
-    position: relative;
-    width: 100%;
-    left: 0;
-    transform: none !important;
-  }
-  .auth-panel { height: 280px; padding: 28px; }
-  .panel-hero h2 { font-size: 30px; }
-  .panel-hero p { display: none; }
-  .feature-pills { display: none; }
-  .auth-form-wrap { padding: 40px 20px 60px; min-height: calc(100vh - 280px); }
-  .segmented { top: -22px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .auth-panel, .auth-form-wrap, .shape-blob, .form-anim, .check-circle, .btn-primary::after {
-    transition: none !important;
-    animation: none !important;
-  }
-}
-
-/* =========================================================
    Google Sign-In Button + Divider
    ========================================================= */
 .google-btn {
@@ -536,4 +510,64 @@ h1.auth-title {
   flex: 1;
   height: 1px;
   background: var(--line);
+}
+
+/* =========================================================
+   Responsive — collapse to single column (≤900px tablets)
+   ========================================================= */
+@media (max-width: 900px) {
+  .auth-panel,
+  .auth-form-wrap {
+    position: relative;
+    width: 100%;
+    left: 0;
+    transform: none !important;
+  }
+  .auth-panel { height: 280px; padding: 28px; }
+  .panel-hero h2 { font-size: 30px; }
+  .panel-hero p { display: none; }
+  .feature-pills { display: none; }
+  .auth-form-wrap { padding: 40px 20px 60px; min-height: calc(100vh - 280px); }
+  .segmented { position: static; width: 100%; margin-bottom: 24px; }
+}
+
+/* =========================================================
+   Responsive — mobile phones (481px–768px)
+   ========================================================= */
+@media (min-width: 481px) and (max-width: 768px) {
+  .auth-panel { height: 240px; padding: 24px 20px; }
+  .auth-form-wrap { padding: 36px 24px 60px; min-height: calc(100vh - 240px); }
+  .auth-card { max-width: 100%; }
+  h1.auth-title { font-size: 28px; }
+}
+
+/* =========================================================
+   Responsive — small mobile (≤480px)
+   ========================================================= */
+@media (max-width: 480px) {
+  .auth-panel { height: 200px; padding: 20px 16px; }
+  .panel-brand .brand-mark { width: 36px; height: 36px; font-size: 16px; }
+  .panel-brand .brand-name { font-size: 18px; }
+  .panel-hero h2 { font-size: 22px; }
+  .auth-form-wrap { padding: 24px 16px 48px; min-height: calc(100vh - 200px); }
+  .auth-card { max-width: 100%; }
+  h1.auth-title { font-size: 24px; }
+  .auth-sub { font-size: 13px; }
+  .segmented { position: static; width: 100%; margin-bottom: 20px; }
+  .segmented button { padding: 8px 10px; font-size: 12px; }
+  .role-row { gap: 8px; }
+  .role-btn { padding: 10px 8px; font-size: 13px; gap: 6px; }
+  .input-fancy { font-size: 16px; padding: 18px 14px 8px; }
+  .btn-primary { padding: 14px; font-size: 15px; margin-top: 18px; }
+  .google-btn { padding: 13px 14px; font-size: 14px; }
+}
+
+/* =========================================================
+   Reduced motion
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .auth-panel, .auth-form-wrap, .shape-blob, .form-anim, .check-circle, .btn-primary::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
