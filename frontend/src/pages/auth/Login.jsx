@@ -18,9 +18,14 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const { error } = await signIn(email, password);
+      const { data, error } = await signIn(email, password);
       if (error) throw error;
-      navigate('/dashboard');
+      const role = data?.user?.user_metadata?.role;
+      if (role === 'teacher') {
+        navigate('/teacher/dashboard');
+      } else {
+        navigate('/student/dashboard');
+      }
     } catch (err) {
       setError(err.message || 'Could not sign in.');
       setShakeKey((k) => k + 1);
@@ -36,7 +41,7 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/student/dashboard`,
         },
       });
       if (error) throw error;
