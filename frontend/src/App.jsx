@@ -13,9 +13,21 @@ import ForgotPassword from './pages/auth/ForgotPassword'
 import StudentLayout from './layouts/StudentLayout'
 import StudentDashboard from './pages/student/Dashboard'
 import Tasks from './pages/student/Tasks'
+import Assignments from './pages/student/Assignments'
 
 const Unauthorized = () => (
-  <div style={{ color: '#ff9090', background: '#0a1520', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'DM Sans, sans-serif', fontSize: '1.2rem' }}>
+  <div
+    style={{
+      color: '#ff9090',
+      background: '#0a1520',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'DM Sans, sans-serif',
+      fontSize: '1.2rem',
+    }}
+  >
     🚫 Unauthorized — You don't have access to this page.
   </div>
 )
@@ -35,20 +47,26 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Old dashboard — keep for now */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Student routes */}
-          <Route element={
-            <ProtectedRoute>
-              <StudentLayout />
-            </ProtectedRoute>
-          }>
+          <Route
+            element={
+              <ProtectedRoute>
+                <StudentLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route path="/student/dashboard" element={<StudentDashboard />} />
             <Route path="/student/tasks" element={<Tasks />} />
+            <Route path="/student/assignments" element={<Assignments />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />
