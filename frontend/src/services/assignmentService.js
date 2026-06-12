@@ -1,3 +1,4 @@
+// src/services/assignmentService.js
 import { supabase } from '../lib/supabaseClient'
 
 export const fetchAssignments = async () => {
@@ -5,10 +6,32 @@ export const fetchAssignments = async () => {
     const { data, error } = await supabase
       .from('assignments')
       .select('*')
-      .order('deadline', { ascending: true })
+      .order('created_at', { ascending: false })
     return { data: data || [], error }
   } catch (error) {
     return { data: [], error }
+  }
+}
+
+export const fetchAssignmentById = async (id) => {
+  try {
+    const { data, error } = await supabase
+      .from('assignments')
+      .select('*')
+      .eq('id', id)
+      .single()
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export const fetchTeacherDashboardStats = async () => {
+  try {
+    const { data, error } = await supabase.rpc('get_teacher_dashboard_stats')
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
   }
 }
 
@@ -43,6 +66,26 @@ export const createAssignment = async (assignmentData, file) => {
         file_url,
         created_by: assignmentData.created_by,
       }])
+      .select()
+      .single()
+
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export const updateAssignment = async (id, assignmentData) => {
+  try {
+    const { data, error } = await supabase
+      .from('assignments')
+      .update({
+        title: assignmentData.title.trim(),
+        subject: assignmentData.subject.trim(),
+        deadline: assignmentData.deadline,
+        description: assignmentData.description.trim(),
+      })
+      .eq('id', id)
       .select()
       .single()
 
