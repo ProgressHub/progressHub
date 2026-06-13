@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
-import { fetchQuizWithQuestions, submitScore } from '../../../services/quizService'
+import { fetchQuizWithQuestions, submitScore, getStudentQuizScore } from '../../../services/quizService'
 
 const TakeQuiz = () => {
   const { id } = useParams()
@@ -10,18 +10,30 @@ const TakeQuiz = () => {
   const { user } = useAuth()
   const [quiz, setQuiz] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [alreadyTaken, setAlreadyTaken] = useState(false)
   const [answers, setAnswers] = useState({})
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
+      
+      // First check if student already took this quiz
+      const { data: existingSubmission, error: checkError } = await getStudentQuizScore(id, user.id)
+      
+      if (existingSubmission) {
+        setAlreadyTaken(true)
+        setLoading(false)
+        return
+      }
+      
+      // If not taken, load the quiz
       const { data } = await fetchQuizWithQuestions(id)
       if (data) setQuiz(data)
       setLoading(false)
     }
     load()
-  }, [id])
+  }, [id, user.id])
 
   const handleAnswer = (questionId, optionIndex) => {
     setAnswers(prev => ({ ...prev, [questionId]: optionIndex }))
@@ -29,6 +41,15 @@ const TakeQuiz = () => {
 
   const handleSubmit = async () => {
     if (!quiz) return
+    
+    // Double-check before submitting
+    const { data: existingSubmission } = await getStudentQuizScore(id, user.id)
+    if (existingSubmission) {
+      alert('You have already taken this quiz!')
+      navigate('/student/quizzes')
+      return
+    }
+    
     setSubmitting(true)
 
     let score = 0
@@ -39,13 +60,48 @@ const TakeQuiz = () => {
     })
 
     const total = quiz.questions.length
-    await submitScore(id, user.id, score, total)
-    navigate(`/student/quizzes/${id}/result`, { state: { score, total, quizTitle: quiz.title } })
+    const { error } = await submitScore(id, user.id, score, total)
+    
+    if (error) {
+      if (error.code === '23505') {
+        alert('You have already taken this quiz!')
+        navigate('/student/quizzes')
+      } else {
+        alert('Error submitting quiz: ' + error.message)
+        setSubmitting(false)
+      }
+    } else {
+      navigate(`/student/quizzes/${id}/result`, { state: { score, total, quizTitle: quiz.title } })
+    }
     setSubmitting(false)
   }
 
   const answeredCount = Object.keys(answers).length
   const totalQuestions = quiz?.questions?.length || 0
+
+  // Show message if quiz already taken
+  if (!loading && alreadyTaken) {
+    return (
+      <>
+        <style>{`
+          .tq-already-taken { max-width: 680px; text-align: center; padding: 48px 24px; background: #fff; border-radius: 16px; border: 1px solid #dbeafe; }
+          .tq-already-icon { font-size: 48px; margin-bottom: 16px; }
+          .tq-already-title { font-size: 24px; font-weight: 700; color: #0c2d4a; margin-bottom: 8px; }
+          .tq-already-text { color: #5a7a96; margin-bottom: 24px; }
+          .tq-already-btn { padding: 10px 24px; background: #075985; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+          .tq-already-btn:hover { background: #0c2d4a; }
+        `}</style>
+        <div className="tq-already-taken">
+          <div className="tq-already-icon">📝</div>
+          <div className="tq-already-title">Quiz Already Completed</div>
+          <div className="tq-already-text">You have already taken this quiz. You cannot retake it.</div>
+          <button className="tq-already-btn" onClick={() => navigate('/student/quizzes')}>
+            Back to Quizzes
+          </button>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
