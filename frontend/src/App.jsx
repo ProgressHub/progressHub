@@ -14,6 +14,7 @@ import StudentLayout from './layouts/StudentLayout'
 import StudentDashboard from './pages/student/Dashboard'
 import Tasks from './pages/student/Tasks'
 import Assignments from './pages/student/Assignments'
+import StudentAttendance from './pages/student/Attendance'
 
 import TeacherLayout from './layouts/TeacherLayout'
 import TeacherDashboard from './pages/teacher/Dashboard'
@@ -21,6 +22,7 @@ import AssignmentList from './pages/teacher/assignments/AssignmentList'
 import CreateAssignment from './pages/teacher/assignments/CreateAssignment'
 import ViewAssignment from './pages/teacher/assignments/ViewAssignment'
 import EditAssignment from './pages/teacher/assignments/EditAssignment'
+import TeacherAttendance from './pages/teacher/Attendance'
 
 const Unauthorized = () => (
   <div style={{ color: '#ff9090', background: '#0a1520', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'DM Sans, sans-serif', fontSize: '1.2rem' }}>
@@ -33,7 +35,6 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Auth routes */}
           <Route element={<AuthShell><Outlet /></AuthShell>}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -41,8 +42,6 @@ function App() {
 
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
-
-          {/* Old dashboard */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
 
           {/* Student routes */}
@@ -50,6 +49,7 @@ function App() {
             <Route path="/student/dashboard" element={<StudentDashboard />} />
             <Route path="/student/tasks" element={<Tasks />} />
             <Route path="/student/assignments" element={<Assignments />} />
+            <Route path="/student/attendance" element={<StudentAttendance />} />
           </Route>
 
           {/* Teacher routes */}
@@ -59,6 +59,7 @@ function App() {
             <Route path="/teacher/assignments/create" element={<CreateAssignment />} />
             <Route path="/teacher/assignments/:id" element={<ViewAssignment />} />
             <Route path="/teacher/assignments/:id/edit" element={<EditAssignment />} />
+            <Route path="/teacher/attendance" element={<TeacherAttendance />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />

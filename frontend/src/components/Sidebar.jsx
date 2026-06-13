@@ -39,8 +39,7 @@ const navItems = [
   )},
 ];
 
-// ✅ Homework removed from here
-const comingSoon = ["/student/attendance", "/student/quizzes", "/student/reminders"];
+const comingSoon = ["/student/quizzes", "/student/reminders"];
 
 const Sidebar = ({ onClose, isMobile }) => {
   return (
@@ -91,10 +90,7 @@ const Sidebar = ({ onClose, isMobile }) => {
         }
       `}</style>
 
-      <aside style={{
-        ...styles.sidebar,
-        height: isMobile ? "100dvh" : "100%",
-      }}>
+      <aside style={{ ...styles.sidebar, height: isMobile ? "100dvh" : "100%" }}>
         <div style={styles.top}>
           <div style={styles.closeRow}>
             <span style={styles.drawerTitle}>Menu</span>
@@ -105,7 +101,6 @@ const Sidebar = ({ onClose, isMobile }) => {
               </svg>
             </button>
           </div>
-
           <nav style={styles.nav}>
             {navItems.map((item) => (
               comingSoon.includes(item.path) ? (
@@ -128,7 +123,6 @@ const Sidebar = ({ onClose, isMobile }) => {
             ))}
           </nav>
         </div>
-
         <div style={styles.bottom}>
           <div style={styles.divider} />
           <NavLink to="/logout" className="ss-logout">
@@ -147,28 +141,9 @@ const Sidebar = ({ onClose, isMobile }) => {
 };
 
 const styles = {
-  sidebar: {
-    width: "230px",
-    backgroundColor: "#0c4a6e",
-    borderRight: "1px solid #0a3a57",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    padding: "20px 0",
-    flexShrink: 0,
-  },
-  top: {
-    display: "flex",
-    flexDirection: "column",
-    flex: 1,
-    overflow: "hidden",
-  },
-  closeRow: {
-    display: "flex", alignItems: "center",
-    padding: "0 12px 12px",
-    borderBottom: "1px solid rgba(255,255,255,0.08)",
-    marginBottom: "8px",
-  },
+  sidebar: { width: "230px", backgroundColor: "#0c4a6e", borderRight: "1px solid #0a3a57", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "20px 0", flexShrink: 0 },
+  top: { display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" },
+  closeRow: { display: "flex", alignItems: "center", padding: "0 12px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", marginBottom: "8px" },
   drawerTitle: { fontSize: "14px", fontWeight: "600", color: "#b8d4ea" },
   nav: { display: "flex", flexDirection: "column", gap: "4px", padding: "0 12px", overflowY: "auto" },
   icon: { display: "flex", alignItems: "center", flexShrink: 0 },
