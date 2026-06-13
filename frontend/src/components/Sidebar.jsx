@@ -39,7 +39,7 @@ const navItems = [
   )},
 ];
 
-const comingSoon = ["/student/quizzes", "/student/reminders"];
+const comingSoon = ["/student/reminders"];
 
 const Sidebar = ({ onClose, isMobile }) => {
   return (
