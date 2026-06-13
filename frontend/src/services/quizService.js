@@ -26,6 +26,42 @@ export const fetchTeacherQuizzes = async (teacherId) => {
   }
 }
 
+export const getCompletedQuizIds = async (studentId) => {
+  try {
+    const { data, error } = await supabase
+      .from('quiz_submissions')
+      .select('quiz_id')
+      .eq('student_id', studentId)
+    
+    if (error) throw error
+    return { completedIds: data.map(sub => sub.quiz_id), error: null }
+  } catch (error) {
+    return { completedIds: [], error }
+  }
+}
+
+export const fetchUnattemptedQuizzes = async (studentId) => {
+  try {
+    const { completedIds, error: completedError } = await getCompletedQuizIds(studentId)
+    
+    if (completedError) throw completedError
+    
+    let query = supabase
+      .from('quizzes')
+      .select('id, title, subject, created_at, questions(count)')
+      .order('created_at', { ascending: false })
+    
+    if (completedIds.length > 0) {
+      query = query.not('id', 'in', `(${completedIds.join(',')})`)
+    }
+    
+    const { data, error } = await query
+    return { data: data || [], error }
+  } catch (error) {
+    return { data: [], error }
+  }
+}
+
 export const fetchQuizWithQuestions = async (quizId) => {
   try {
     const { data, error } = await supabase
@@ -88,5 +124,44 @@ export const submitScore = async (quizId, userId, score, totalQuestions) => {
     return { data, error }
   } catch (error) {
     return { data: null, error }
+  }
+}
+
+export const getStudentQuizScore = async (quizId, studentId) => {
+  try {
+    const { data, error } = await supabase
+      .from('quiz_submissions')
+      .select('score, total_questions, completed_at')
+      .eq('quiz_id', quizId)
+      .eq('student_id', studentId)
+      .single()
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export const getCompletedQuizzesWithScores = async (studentId) => {
+  try {
+    const { data, error } = await supabase
+      .from('quiz_submissions')
+      .select(`
+        quiz_id,
+        score,
+        total_questions,
+        completed_at,
+        quizzes:quiz_id (
+          id,
+          title,
+          subject,
+          created_at
+        )
+      `)
+      .eq('student_id', studentId)
+      .order('completed_at', { ascending: false })
+    
+    return { data: data || [], error }
+  } catch (error) {
+    return { data: [], error }
   }
 }
