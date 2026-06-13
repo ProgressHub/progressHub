@@ -15,6 +15,9 @@ import StudentDashboard from './pages/student/Dashboard'
 import Tasks from './pages/student/Tasks'
 import Assignments from './pages/student/Assignments'
 import StudentAttendance from './pages/student/Attendance'
+import StudentQuizList from './pages/student/quiz/QuizList'
+import TakeQuiz from './pages/student/quiz/TakeQuiz'
+import QuizResult from './pages/student/quiz/QuizResult'
 
 import TeacherLayout from './layouts/TeacherLayout'
 import TeacherDashboard from './pages/teacher/Dashboard'
@@ -23,6 +26,8 @@ import CreateAssignment from './pages/teacher/assignments/CreateAssignment'
 import ViewAssignment from './pages/teacher/assignments/ViewAssignment'
 import EditAssignment from './pages/teacher/assignments/EditAssignment'
 import TeacherAttendance from './pages/teacher/Attendance'
+import TeacherQuizList from './pages/teacher/quiz/QuizList'
+import CreateQuiz from './pages/teacher/quiz/CreateQuiz'
 
 const Unauthorized = () => (
   <div style={{ color: '#ff9090', background: '#0a1520', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'DM Sans, sans-serif', fontSize: '1.2rem' }}>
@@ -50,6 +55,9 @@ function App() {
             <Route path="/student/tasks" element={<Tasks />} />
             <Route path="/student/assignments" element={<Assignments />} />
             <Route path="/student/attendance" element={<StudentAttendance />} />
+            <Route path="/student/quizzes" element={<StudentQuizList />} />
+            <Route path="/student/quizzes/:id" element={<TakeQuiz />} />
+            <Route path="/student/quizzes/:id/result" element={<QuizResult />} />
           </Route>
 
           {/* Teacher routes */}
@@ -60,6 +68,8 @@ function App() {
             <Route path="/teacher/assignments/:id" element={<ViewAssignment />} />
             <Route path="/teacher/assignments/:id/edit" element={<EditAssignment />} />
             <Route path="/teacher/attendance" element={<TeacherAttendance />} />
+            <Route path="/teacher/quizzes" element={<TeacherQuizList />} />
+            <Route path="/teacher/quizzes/create" element={<CreateQuiz />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />
