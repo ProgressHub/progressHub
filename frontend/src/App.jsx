@@ -18,6 +18,7 @@ import StudentAttendance from './pages/student/Attendance'
 import StudentQuizList from './pages/student/quiz/QuizList'
 import TakeQuiz from './pages/student/quiz/TakeQuiz'
 import QuizResult from './pages/student/quiz/QuizResult'
+import StudentAnalytics from './pages/student/Analytics'
 
 import TeacherLayout from './layouts/TeacherLayout'
 import TeacherDashboard from './pages/teacher/Dashboard'
@@ -28,6 +29,7 @@ import EditAssignment from './pages/teacher/assignments/EditAssignment'
 import TeacherAttendance from './pages/teacher/Attendance'
 import TeacherQuizList from './pages/teacher/quiz/QuizList'
 import CreateQuiz from './pages/teacher/quiz/CreateQuiz'
+import TeacherAnalytics from './pages/teacher/Analytics'
 
 const Unauthorized = () => (
   <div style={{ color: '#ff9090', background: '#0a1520', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'DM Sans, sans-serif', fontSize: '1.2rem' }}>
@@ -58,6 +60,7 @@ function App() {
             <Route path="/student/quizzes" element={<StudentQuizList />} />
             <Route path="/student/quizzes/:id" element={<TakeQuiz />} />
             <Route path="/student/quizzes/:id/result" element={<QuizResult />} />
+            <Route path="/student/analytics" element={<StudentAnalytics />} />
           </Route>
 
           {/* Teacher routes */}
@@ -70,6 +73,7 @@ function App() {
             <Route path="/teacher/attendance" element={<TeacherAttendance />} />
             <Route path="/teacher/quizzes" element={<TeacherQuizList />} />
             <Route path="/teacher/quizzes/create" element={<CreateQuiz />} />
+            <Route path="/teacher/analytics" element={<TeacherAnalytics />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />

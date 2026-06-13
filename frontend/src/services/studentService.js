@@ -2,7 +2,6 @@ import { supabase } from '../lib/supabaseClient'
 
 export const fetchStudentStats = async (userId) => {
   try {
-    // Call your database function
     const { data, error } = await supabase
       .rpc('get_student_dashboard_stats')
     
@@ -15,7 +14,7 @@ export const fetchStudentStats = async (userId) => {
       data: {
         tasksPending: data?.pending_tasks || 0,
         upcomingAssignments: data?.upcoming_assignments || 0,
-        attendancePercent: data?.attendance_rate || 95.5,
+        attendancePercent: data?.attendance_rate || 0,
       },
       error: null,
     }
@@ -41,29 +40,46 @@ const fetchStudentStatsFallback = async (userId) => {
         .from('assignments')
         .select('id', { count: 'exact', head: true })
         .gt('deadline', new Date().toISOString())
-      
       if (!error) upcomingCount = count || 0
     } catch (err) {
       console.log('Assignments table not ready yet')
+    }
+
+    // ── Real attendance calculation ──
+    let attendancePercent = 0
+    try {
+      const { data: attData, error: attError } = await supabase
+        .from('attendance')
+        .select('status')
+        .eq('student_id', userId)
+
+      if (!attError && attData?.length > 0) {
+        const presentCount = attData.filter(a =>
+          a.status?.toLowerCase() === 'present'
+        ).length
+        attendancePercent = Math.round((presentCount / attData.length) * 100)
+      }
+    } catch (err) {
+      console.log('Attendance fetch error:', err)
     }
 
     return {
       data: {
         tasksPending: pendingCount || 0,
         upcomingAssignments: upcomingCount,
-        attendancePercent: 95.5,
+        attendancePercent,
       },
       error: null,
     }
   } catch (error) {
     console.error('Fallback stats error:', error)
-    return { 
-      data: { 
-        tasksPending: 0, 
-        upcomingAssignments: 0, 
-        attendancePercent: 0 
-      }, 
-      error 
+    return {
+      data: {
+        tasksPending: 0,
+        upcomingAssignments: 0,
+        attendancePercent: 0
+      },
+      error
     }
   }
 }
@@ -79,11 +95,10 @@ export const fetchRecentTasks = async (userId) => {
 
     if (error) throw error
     
-    // Format tasks to match what RecentActivity expects
     const formattedTasks = (data || []).map(task => ({
       id: task.id,
       title: task.title,
-      subject: task.subject || 'General',  // This is key - RecentActivity uses task.subject
+      subject: task.subject || 'General',
       due_date: task.due_date,
       status: task.status
     }))
