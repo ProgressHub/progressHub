@@ -18,7 +18,7 @@ export const fetchTeacherQuizzes = async (teacherId) => {
     const { data, error } = await supabase
       .from('quizzes')
       .select('id, title, subject, created_at, questions(count)')
-      .eq('created_by', teacherId)
+      .eq('teacher_id', teacherId)
       .order('created_at', { ascending: false })
     return { data: data || [], error }
   } catch (error) {
@@ -46,7 +46,7 @@ export const createFullQuiz = async (quizData, questions, teacherId) => {
       .insert([{
         title: quizData.title.trim(),
         subject: quizData.subject.trim(),
-        created_by: teacherId,
+        teacher_id: teacherId,
       }])
       .select()
       .single()
