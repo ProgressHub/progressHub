@@ -40,6 +40,9 @@ const StudentAnalytics = () => {
     ? Math.round((totalPresent / totalRecords) * 100)
     : 0;
 
+  // Filter out zero values for the pie chart
+  const filteredAttendance = attendance.filter(item => item.value > 0);
+
   if (loading) return (
     <div style={styles.center}>
       <div style={styles.spinner} />
@@ -113,16 +116,16 @@ const StudentAnalytics = () => {
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
-                data={attendance}
+                data={filteredAttendance}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
                 cy="50%"
                 outerRadius={90}
-                label={({ name, percent }) => `${name} ${Math.round(percent * 100)}%`}
+                label={({ name, percent }) => percent > 0.01 ? `${name} ${Math.round(percent * 100)}%` : ''}
                 labelLine={{ stroke: "#b8d4ea" }}
               >
-                {attendance.map((_, i) => (
+                {filteredAttendance.map((_, i) => (
                   <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                 ))}
               </Pie>
@@ -141,7 +144,7 @@ const StudentAnalytics = () => {
 
 const styles = {
   page:       { padding: "24px", maxWidth: "860px", margin: "0 auto" },
-  heading:    { fontSize: "22px", fontWeight: "700", color: "#f0f9ff", marginBottom: "24px" },
+  heading:    { fontSize: "22px", fontWeight: "700", color: "#1a1a2e", marginBottom: "24px" },
   cardRow:    { display: "flex", gap: "16px", marginBottom: "28px", flexWrap: "wrap" },
   card:       { flex: 1, minWidth: "140px", background: "#0c4a6e", border: "1px solid #1e3a52", borderRadius: "12px", padding: "20px", display: "flex", flexDirection: "column", gap: "8px" },
   cardLabel:  { fontSize: "13px", color: "#b8d4ea", fontWeight: "500" },

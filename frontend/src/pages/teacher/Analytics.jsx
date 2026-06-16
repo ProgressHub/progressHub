@@ -121,7 +121,7 @@ const TeacherAnalytics = () => {
 
 const styles = {
   page:         { padding: "24px", maxWidth: "860px", margin: "0 auto" },
-  heading:      { fontSize: "22px", fontWeight: "700", color: "#f0f9ff", marginBottom: "24px" },
+  heading:      { fontSize: "22px", fontWeight: "700", color: "#1a1a2e", marginBottom: "24px" },
   cardRow:      { display: "flex", gap: "16px", marginBottom: "28px", flexWrap: "wrap" },
   card:         { flex: 1, minWidth: "140px", background: "#0c4a6e", border: "1px solid #1e3a52", borderRadius: "12px", padding: "20px", display: "flex", flexDirection: "column", gap: "8px" },
   cardLabel:    { fontSize: "13px", color: "#b8d4ea", fontWeight: "500" },
