@@ -48,13 +48,11 @@ const fetchStudentStatsFallback = async (userId, attendancePercent = null) => {
         .from('assignments')
         .select('id', { count: 'exact', head: true })
         .gt('deadline', new Date().toISOString())
-      
       if (!error) upcomingCount = count || 0
     } catch (err) {
       console.log('Assignments table not ready yet')
     }
 
-    // If attendancePercent wasn't passed, calculate it
     let finalAttendancePercent = attendancePercent
     if (finalAttendancePercent === null) {
       const { data: attendanceRecords } = await fetchStudentAttendance(userId)
@@ -69,13 +67,12 @@ const fetchStudentStatsFallback = async (userId, attendancePercent = null) => {
       data: {
         tasksPending: pendingCount || 0,
         upcomingAssignments: upcomingCount,
-        attendancePercent: finalAttendancePercent, // Use real value
+        attendancePercent: finalAttendancePercent,
       },
       error: null,
     }
   } catch (error) {
     console.error('Fallback stats error:', error)
-    // Last resort fallback - calculate attendance here too
     let fallbackAttendance = 0
     try {
       const { data: attendanceRecords } = await fetchStudentAttendance(userId)
@@ -109,11 +106,10 @@ export const fetchRecentTasks = async (userId) => {
 
     if (error) throw error
     
-    // Format tasks to match what RecentActivity expects
     const formattedTasks = (data || []).map(task => ({
       id: task.id,
       title: task.title,
-      subject: task.subject || 'General',  // This is key - RecentActivity uses task.subject
+      subject: task.subject || 'General',
       due_date: task.due_date,
       status: task.status
     }))
