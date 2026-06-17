@@ -30,7 +30,7 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
   // Mark Form variables
   const [subject, setSubject] = useState('Mathematics');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  // State format: { [studentId]: 'present' | 'absent' | 'late' }
+  // State format: { [studentId]: 'present' | 'absent' | 'late' | null }
   // Default: ALL UNCHECKED (null)
   const [attendanceSheet, setAttendanceSheet] = useState<Record<string, 'present' | 'absent' | 'late' | null>>({});
 
@@ -55,11 +55,12 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
     }
   }, [currentUser]);
 
+  // Re-fetch when class or subject changes
   useEffect(() => {
     if (isTeacher && selectedClassId) {
       fetchClassStudentsAndRecords();
     }
-  }, [selectedClassId]);
+  }, [selectedClassId, subject]);
 
   const fetchStudentHistory = async () => {
     try {
@@ -86,26 +87,24 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
       });
       setAttendanceSheet(initialSheet);
 
-      // Check if attendance already exists for today
-      const today = new Date().toISOString().slice(0, 10);
+      // Get all attendance for this class
       const allAtt = await dbService.getAllAttendance(selectedClassId);
+      setAttendanceRecords(allAtt);
       
-      // Filter today's attendance
-      const todayAtt = allAtt.filter(a => a.date === today);
+      // Check if attendance exists for today AND this subject
+      const today = new Date().toISOString().slice(0, 10);
+      const todaySubjectAtt = allAtt.filter(a => a.date === today && a.subject === subject);
       
-      if (todayAtt.length > 0) {
-        // If attendance already exists for today, populate the sheet
+      if (todaySubjectAtt.length > 0) {
+        // If attendance already exists for today's subject, populate the sheet
         const existingSheet: Record<string, 'present' | 'absent' | 'late' | null> = {};
         stdList.forEach(s => {
-          const existing = todayAtt.find(a => a.student_id === s.id);
+          const existing = todaySubjectAtt.find(a => a.student_id === s.id);
           existingSheet[s.id] = existing ? existing.status : null;
         });
         setAttendanceSheet(existingSheet);
-        setSubmitSuccess(true);
-        setSubmitError('Attendance already marked for today. You can update it.');
       }
       
-      setAttendanceRecords(allAtt);
     } catch (err) {
       console.error('Error fetching class students:', err);
     } finally {
@@ -132,12 +131,14 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
       return;
     }
 
-    // Check if attendance already exists for today
+    // Check if attendance already exists for today AND this subject
     const today = new Date().toISOString().slice(0, 10);
-    const existingToday = attendanceRecords.filter(a => a.date === today && a.class_id === selectedClassId);
+    const existingToday = attendanceRecords.filter(
+      a => a.date === today && a.subject === subject && a.class_id === selectedClassId
+    );
     
     if (existingToday.length > 0) {
-      setSubmitError('Attendance for today has already been marked. Please refresh to see the updated sheet.');
+      setSubmitError(`Attendance for "${subject}" today has already been marked.`);
       setTimeout(() => setSubmitError(''), 5000);
       return;
     }
@@ -163,7 +164,7 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
           dbService.createNotification({
             user_id: rec.student_id,
             title: `Attendance Marked: ${rec.status.toUpperCase()}`,
-            message: `You were registered as "${rec.status}" for class "${rec.subject}" on ${rec.date}.`
+            message: `You were registered as "${rec.status}" for "${rec.subject}" on ${rec.date}.`
           }).catch(() => {});
         }
       });
@@ -194,9 +195,11 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
     ? Math.round(((presentCount + (lateCount * 0.75)) / totalClasses) * 100)
     : 100;
 
-  // Check if today's attendance already exists
+  // Check if today's attendance exists for this subject
   const today = new Date().toISOString().slice(0, 10);
-  const hasTodayAttendance = attendanceRecords.some(a => a.date === today && a.class_id === selectedClassId);
+  const hasTodaySubjectAttendance = attendanceRecords.some(
+    a => a.date === today && a.subject === subject && a.class_id === selectedClassId
+  );
 
   return (
     <div id="attendance_module_root" className="space-y-6">
@@ -216,7 +219,7 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
                 <p className="text-xs text-slate-400 font-medium">Select class schedule, subject, and update roll calls.</p>
               </div>
 
-              {/* Class selection dropdown - Updated styling */}
+              {/* Class selection dropdown - Blended styling */}
               <div className="flex items-center gap-2 shrink-0 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Class:</span>
                 <select
@@ -254,21 +257,21 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
                 </div>
               </div>
 
-              {/* Status Messages */}
-              {submitSuccess && !hasTodayAttendance && (
-                <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 p-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 animate-fade-in">
-                  <CheckCircle2 size={16} /> Roll call generated and written to student profiles!
+              {/* Status Messages - Clean and clear */}
+              {submitSuccess && !hasTodaySubjectAttendance && (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 p-3 rounded-lg text-xs font-semibold flex items-center gap-2">
+                  <CheckCircle2 size={16} /> Attendance for "{subject}" has been saved successfully!
                 </div>
               )}
 
-              {hasTodayAttendance && (
-                <div className="bg-amber-50 border border-amber-100 text-amber-800 p-3 rounded-lg text-xs font-semibold flex items-center gap-1.5">
-                  <AlertTriangle size={16} /> Attendance already marked for today. You can update it below.
+              {hasTodaySubjectAttendance && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-lg text-xs font-semibold flex items-center gap-2">
+                  <AlertTriangle size={16} /> Attendance for "{subject}" today has already been marked.
                 </div>
               )}
 
               {submitError && (
-                <div className="bg-red-50 border border-red-100 text-red-800 p-3 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-lg text-xs font-semibold flex items-center gap-2">
                   <XCircle size={16} /> {submitError}
                 </div>
               )}
@@ -307,7 +310,7 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
                                 </div>
                               </td>
                               
-                              {/* Present Selector */}
+                              {/* Present Selector - Toggle on/off */}
                               <td className="py-3.5 px-4 text-center">
                                 <button
                                   type="button"
@@ -322,7 +325,7 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
                                 </button>
                               </td>
        
-                              {/* Late Selector */}
+                              {/* Late Selector - Toggle on/off */}
                               <td className="py-3.5 px-4 text-center">
                                 <button
                                   type="button"
@@ -337,7 +340,7 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
                                 </button>
                               </td>
        
-                              {/* Absent Selector */}
+                              {/* Absent Selector - Toggle on/off */}
                               <td className="py-3.5 px-4 text-center">
                                 <button
                                   type="button"
@@ -365,16 +368,16 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
                 <button
                   id="submit_roll_btn"
                   type="submit"
-                  disabled={submitting || students.length === 0 || hasTodayAttendance}
+                  disabled={submitting || students.length === 0 || hasTodaySubjectAttendance}
                   className={`px-6 py-2.5 rounded-lg font-semibold text-sm shadow-sm transition cursor-pointer ${
-                    hasTodayAttendance
+                    hasTodaySubjectAttendance
                       ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                       : submitting || students.length === 0
                       ? 'bg-emerald-300 text-white cursor-not-allowed'
                       : 'bg-emerald-600 text-white hover:bg-emerald-700'
                   }`}
                 >
-                  {submitting ? 'Submitting Registry...' : hasTodayAttendance ? 'Already Marked Today' : 'Save Attendance Sheet'}
+                  {submitting ? 'Submitting Registry...' : hasTodaySubjectAttendance ? `Already Marked for ${subject}` : 'Save Attendance Sheet'}
                 </button>
               </div>
             </form>
@@ -415,7 +418,7 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
           </div>
         </div>
       ) : (
-        /* STUDENT ATTENDANCE DASHBOARD - Keep as is */
+        /* STUDENT ATTENDANCE DASHBOARD */
         <div className="space-y-6">
           {/* Summary stats row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -482,7 +485,7 @@ export default function AttendanceModule({ currentUser }: AttendanceModuleProps)
           {/* Detailed Attendance Log */}
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-base font-bold text-slate-750 mb-4 flex items-center gap-2">
-              <Calendar size={18} className="text-indigo-600" />
+              <Calendar size={18} className="text-emerald-600" />
               Your Attendance History Archive
             </h3>
             
