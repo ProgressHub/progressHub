@@ -1,3 +1,8 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import React, { useState, useEffect } from 'react';
 import { dbService, isSupabaseConfigured } from './services/db';
 import { Profile } from './types';
@@ -20,12 +25,9 @@ import {
   BarChart4,
   Bell,
   LogOut,
-  Info,
-  Sparkles,
   BookOpen,
   Menu,
-  X,
-  Database
+  X
 } from 'lucide-react';
 
 export default function App() {
@@ -185,71 +187,61 @@ export default function App() {
     <div className="min-h-screen bg-[#f8fafc] flex">
       
       {/* 1. SIDEBAR NAVIGATION - DESKTOP */}
-      <aside className="hidden lg:flex flex-col justify-between w-64 bg-white text-slate-700 border-r border-slate-200 shrink-0 select-none">
-        <div>
-          {/* Brand Header */}
-          <div className="h-16 flex items-center gap-2.5 px-6 border-b border-slate-100">
-            <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold">
-              <BookOpen size={16} />
-            </div>
-            <span className="text-lg font-black text-slate-800 tracking-tight">LearningTracker</span>
+      <aside className="hidden lg:flex flex-col h-screen sticky top-0 w-64 bg-white text-slate-700 border-r border-slate-200 shrink-0 select-none">
+        {/* Brand Header - Fixed at top */}
+        <div className="h-16 flex items-center gap-2.5 px-6 border-b border-slate-100 shrink-0">
+          <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold">
+            <BookOpen size={16} />
           </div>
-
-          {/* User badge row */}
-          <div className="p-5 border-b border-slate-100 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold uppercase text-xs border border-indigo-100">
-              {currentUser.full_name.substr(0, 2)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h4 className="text-xs font-bold text-slate-800 truncate leading-none">{currentUser.full_name}</h4>
-              <span className={`inline-block mt-1 text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded leading-none ${
-                currentUser.role === 'student' ? 'bg-indigo-55 text-indigo-600 bg-indigo-50' : 'bg-emerald-55 text-emerald-600 bg-emerald-50'
-              }`}>
-                {currentUser.role}
-              </span>
-            </div>
-          </div>
-
-          {/* Menu Items */}
-          <nav className="p-4 space-y-1">
-            {navItems.map((item) => {
-              const IconComp = item.icon;
-              const isSelected = activeTab === item.id;
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleTabClick(item.id)}
-                  className={`w-full flex items-center gap-3 py-2 px-3.5 rounded-xl text-xs font-semibold transition-all ${
-                    isSelected
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <IconComp size={15} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+          <span className="text-lg font-black text-slate-800 tracking-tight">LearningTracker</span>
         </div>
 
-        {/* Footer controls inside sidebar */}
-        <div className="p-4 border-t border-slate-100 space-y-3">
-          {/* Service mode indicator */}
-          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 text-[10px] text-slate-500">
-            <Database size={11} className={isSupabaseConfigured ? 'text-indigo-500' : 'text-slate-400'} />
-            <span className="font-semibold block truncate leading-none">
-              {isSupabaseConfigured ? 'Supabase Connected' : 'Offline Sandbox mode'}
+        {/* User badge row - Fixed */}
+        <div className="p-5 border-b border-slate-100 flex items-center gap-3 shrink-0">
+          <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold uppercase text-xs border border-indigo-100">
+            {currentUser.full_name.substr(0, 2)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h4 className="text-sm font-bold text-slate-800 truncate leading-none">{currentUser.full_name}</h4>
+            <span className={`inline-block mt-1 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded leading-none ${
+              currentUser.role === 'student' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'
+            }`}>
+              {currentUser.role}
             </span>
           </div>
+        </div>
 
+        {/* Menu Items - Scrollable if needed */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+          {navItems.map((item) => {
+            const IconComp = item.icon;
+            const isSelected = activeTab === item.id;
+            
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleTabClick(item.id)}
+                className={`w-full flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-semibold transition-all ${
+                  isSelected
+                    ? 'bg-indigo-50 text-indigo-700'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                <IconComp size={18} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Logout Button - Fixed at bottom with red color */}
+        <div className="p-4 border-t border-slate-100 shrink-0">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2 px-3.5 rounded-xl bg-slate-50 hover:bg-red-50 hover:text-red-600 border border-slate-100 text-slate-500 transition-all font-semibold text-xs"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-200 transition-all font-semibold text-sm"
           >
-            <LogOut size={13} />
-            <span>Sign Out Profile</span>
+            <LogOut size={18} />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
@@ -312,13 +304,13 @@ export default function App() {
                   <button
                     key={item.id}
                     onClick={() => handleTabClick(item.id)}
-                    className={`w-full flex items-center gap-3 py-2 px-3.5 rounded-xl text-xs font-semibold transition ${
+                    className={`w-full flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-semibold transition ${
                       isSelected
                         ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
-                    <IconComp size={15} />
+                    <IconComp size={18} />
                     <span>{item.label}</span>
                   </button>
                 );
@@ -327,9 +319,9 @@ export default function App() {
               <div className="border-t border-slate-200 pt-3 mt-3">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 py-2 px-3.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+                  className="w-full flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition"
                 >
-                  <LogOut size={15} />
+                  <LogOut size={18} />
                   <span>Log Out</span>
                 </button>
               </div>
