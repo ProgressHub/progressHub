@@ -81,7 +81,8 @@ export interface Quiz {
   title: string;
   subject: string;
   duration_minutes: number;
-  class_id?: string; // links to classes
+  class_id?: string;
+  deadline?: string;
   created_at: string;
 }
 

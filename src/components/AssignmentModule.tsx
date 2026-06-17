@@ -122,120 +122,130 @@ export default function AssignmentModule({ currentUser }: AssignmentModuleProps)
   };
 
   return (
-    <div id="assignment_module_root" className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div id="assignment_module_root" className="space-y-6">
       
-      {/* TEACHER CREATOR VIEW */}
+      {/* TEACHER CREATOR VIEW - SPLIT LAYOUT */}
       {isTeacher && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-fit">
-          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <Plus size={20} className="text-indigo-600" />
-            Post New Assignment
-          </h3>
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-100">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <Plus size={20} className="text-indigo-600" />
+              Post New Assignment
+            </h3>
+          </div>
           
-          <form onSubmit={handleCreateAssignment} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Classroom Destination</label>
-              <select
-                value={targetClassId}
-                onChange={(e) => setTargetClassId(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-              >
-                {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Subject</label>
-              <select
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-              >
-                {subjects.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Assignment Title</label>
-              <input
-                type="text"
-                placeholder="e.g. Chapter 6 Review Exercises"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Deadline</label>
-              <input
-                type="datetime-local"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Instructions / Description</label>
-              <textarea
-                placeholder="Write instructions regarding materials, submissions and evaluation criteria here."
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"
-              />
-            </div>
-
-            {/* Drag Drop or manual File Upload */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Attach Notes or Worksheets (Optional)</label>
-              <div className="border border-dashed border-slate-250 hover:border-indigo-400 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col items-center justify-center relative cursor-pointer">
-                <input
-                  type="file"
-                  onChange={handleFileChange}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-                <FileUp className="text-slate-400 mb-2" size={24} />
-                <span className="text-xs font-semibold text-slate-600 text-center">
-                  {selectedFile ? selectedFile.name : 'Drag files here or click to upload'}
-                </span>
-                <span className="text-[10px] text-slate-400 mt-1">PDF, DOCX or ZIP up to 10MB</span>
-              </div>
-              {uploadSuccess && (
-                <div className="flex items-center gap-1.5 text-xs text-green-600 font-semibold mt-2">
-                  <CheckCircle2 size={14} /> File uploaded & linked successfully!
+          <form onSubmit={handleCreateAssignment}>
+            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+              
+              {/* LEFT COLUMN - Basic Info */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Classroom Destination</label>
+                  <select
+                    value={targetClassId}
+                    onChange={(e) => setTargetClassId(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  >
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
+                  </select>
                 </div>
-              )}
-            </div>
 
-            <button
-              id="submit_assignment_btn"
-              type="submit"
-              disabled={uploading}
-              className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition relative overflow-hidden flex items-center justify-center gap-2 ${
-                uploading 
-                  ? 'bg-indigo-300 text-indigo-100 cursor-not-allowed'
-                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
-              }`}
-            >
-              {uploading ? (
-                <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                  Uploading attachment...
-                </>
-              ) : (
-                'Post Assignment'
-              )}
-            </button>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Subject</label>
+                  <select
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  >
+                    {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Assignment Title</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Chapter 6 Review Exercises"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Deadline</label>
+                  <input
+                    type="datetime-local"
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
+                    required
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN - Description & File Upload */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Instructions / Description</label>
+                  <textarea
+                    placeholder="Write instructions regarding materials, submissions and evaluation criteria here."
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Attach Notes or Worksheets (Optional)</label>
+                  <div className="border border-dashed border-slate-250 hover:border-indigo-400 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col items-center justify-center relative cursor-pointer">
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    <FileUp className="text-slate-400 mb-2" size={24} />
+                    <span className="text-xs font-semibold text-slate-600 text-center">
+                      {selectedFile ? selectedFile.name : 'Drag files here or click to upload'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-1">PDF, DOCX or ZIP up to 10MB</span>
+                  </div>
+                  {uploadSuccess && (
+                    <div className="flex items-center gap-1.5 text-xs text-green-600 font-semibold mt-2">
+                      <CheckCircle2 size={14} /> File uploaded & linked successfully!
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  id="submit_assignment_btn"
+                  type="submit"
+                  disabled={uploading}
+                  className={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition relative overflow-hidden flex items-center justify-center gap-2 ${
+                    uploading 
+                      ? 'bg-indigo-300 text-indigo-100 cursor-not-allowed'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
+                >
+                  {uploading ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      Uploading attachment...
+                    </>
+                  ) : (
+                    'Post Assignment'
+                  )}
+                </button>
+              </div>
+            </div>
           </form>
         </div>
       )}
 
       {/* ASSIGNMENTS DISPLAY LIST */}
-      <div className={isTeacher ? 'xl:col-span-2 space-y-4' : 'xl:col-span-3 space-y-4'}>
+      <div className="space-y-4">
         {loading ? (
           <div className="flex justify-center items-center py-24 bg-white rounded-2xl border border-slate-100 shadow-sm">
             <div className="animate-spin border-3 border-indigo-650 border-t-transparent rounded-full h-8 w-8"></div>
@@ -257,7 +267,6 @@ export default function AssignmentModule({ currentUser }: AssignmentModuleProps)
                   className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs hover:shadow-sm hover:border-indigo-100 transition-all flex flex-col justify-between"
                 >
                   <div>
-                    {/* Header bar */}
                     <div className="flex items-center justify-between mb-3">
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
                         assign.subject === 'Mathematics' ? 'bg-indigo-50 text-indigo-700' :
@@ -268,7 +277,6 @@ export default function AssignmentModule({ currentUser }: AssignmentModuleProps)
                         {assign.subject}
                       </span>
 
-                      {/* Deadline chip */}
                       <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
                         rem.type === 'overdue' ? 'bg-red-50 text-red-700 font-semibold' :
                         rem.type === 'immediate' ? 'bg-amber-50 text-amber-700 animate-pulse' :

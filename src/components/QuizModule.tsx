@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { dbService } from '../services/db';
 import { Quiz, QuizQuestion, QuizAttempt, Profile, Class } from '../types';
-import { Clock, HelpCircle, AlertCircle, Sparkles, Plus, Play, Trophy, ListCollapse, CheckCircle2, XCircle } from 'lucide-react';
+import { Clock, HelpCircle, AlertCircle, Sparkles, Plus, Play, Trophy, ListCollapse, CheckCircle2, XCircle, Calendar, Trash2 } from 'lucide-react';
 
 interface QuizModuleProps {
   currentUser: Profile;
@@ -26,7 +26,7 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
-  const [timeRemaining, setTimeRemaining] = useState(0); // in seconds
+  const [timeRemaining, setTimeRemaining] = useState(0);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [completedAttempt, setCompletedAttempt] = useState<QuizAttempt | null>(null);
 
@@ -37,12 +37,16 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
   const [quizTitle, setQuizTitle] = useState('');
   const [quizSubject, setQuizSubject] = useState('Mathematics');
   const [quizDuration, setQuizDuration] = useState(15);
+  const [quizDeadline, setQuizDeadline] = useState('');
   
   // Custom Dynamic List of Questions for creation
   const [questionsCreator, setQuestionsCreator] = useState<Omit<QuizQuestion, 'id' | 'quiz_id'>[]>([
     { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'A' }
   ]);
   const [creatingSuccess, setCreatingSuccess] = useState(false);
+
+  // Track attempted quizzes for students
+  const [attemptedQuizzes, setAttemptedQuizzes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchQuizzes();
@@ -64,6 +68,12 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
       setLoading(true);
       const data = await dbService.getQuizzes(currentUser.role === 'student' ? currentUser.class_id : undefined);
       setQuizzes(data);
+      
+      if (currentUser.role === 'student') {
+        const attempts = await dbService.getStudentQuizAttempts(currentUser.id);
+        const attemptedIds = new Set(attempts.map(a => a.quiz_id));
+        setAttemptedQuizzes(attemptedIds);
+      }
     } catch (err) {
       console.error('Error fetching quizzes:', err);
     } finally {
@@ -73,6 +83,10 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
 
   // --- TEACHER ACTIONS ---
   const handleAddQuestionField = () => {
+    if (questionsCreator.length >= 20) {
+      alert('Maximum 20 questions allowed per quiz.');
+      return;
+    }
     setQuestionsCreator([
       ...questionsCreator,
       { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'A' }
@@ -93,9 +107,22 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
     setQuestionsCreator(updated);
   };
 
+  const handleCorrectAnswerSelect = (idx: number, answer: 'A' | 'B' | 'C' | 'D') => {
+    const updated = [...questionsCreator];
+    updated[idx].correct_answer = answer;
+    setQuestionsCreator(updated);
+  };
+
   const handleCreateNewQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!quizTitle.trim() || questionsCreator.some(q => !q.question.trim())) return;
+    if (!quizTitle.trim() || !quizDeadline) {
+      alert('Please fill in all required fields including deadline.');
+      return;
+    }
+    if (questionsCreator.some(q => !q.question.trim())) {
+      alert('Please fill in all questions.');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -106,12 +133,14 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
         title: quizTitle,
         subject: quizSubject,
         duration_minutes: Number(quizDuration),
-        class_id: targetClassId || undefined
+        class_id: targetClassId || undefined,
+        deadline: quizDeadline
       }, questionsCreator);
 
       setQuizTitle('');
       setQuizSubject('Mathematics');
       setQuizDuration(15);
+      setQuizDeadline('');
       setQuestionsCreator([{ question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'A' }]);
       setCreatingSuccess(true);
       
@@ -124,8 +153,18 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
     }
   };
 
-  // --- STUDENT ACTIONS: TAKING THE MCQ QUIZ ---
+  // --- STUDENT ACTIONS ---
   const startQuiz = async (quiz: Quiz) => {
+    if (attemptedQuizzes.has(quiz.id)) {
+      alert('You have already attempted this quiz. You cannot re-attempt it.');
+      return;
+    }
+
+    if (quiz.deadline && new Date(quiz.deadline) < new Date()) {
+      alert('This quiz has passed its deadline and is no longer available.');
+      return;
+    }
+
     try {
       setLoading(true);
       const questions = await dbService.getQuizQuestions(quiz.id);
@@ -140,7 +179,6 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
       setCompletedAttempt(null);
       setTimeRemaining(quiz.duration_minutes * 60);
 
-      // Setup clean timer interval
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setTimeRemaining((prev) => {
@@ -178,7 +216,6 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
     try {
       setQuizSubmitting(true);
       
-      // Auto Grade Logic
       let correctCount = 0;
       quizQuestions.forEach((q) => {
         const studentChoice = selectedAnswers[q.id];
@@ -193,6 +230,7 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
 
       const attempt = await dbService.submitQuizAttempt(activeQuiz.id, currentUser.id, scorePercent);
       setCompletedAttempt(attempt);
+      setAttemptedQuizzes(prev => new Set(prev).add(activeQuiz.id));
     } catch (err) {
       console.error('Quiz submission failed:', err);
     } finally {
@@ -211,21 +249,22 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
   const minutesRemaining = Math.floor(timeRemaining / 60);
   const secondsRemaining = timeRemaining % 60;
 
+  const isQuizExpired = (quiz: Quiz) => {
+    return quiz.deadline && new Date(quiz.deadline) < new Date();
+  };
+
   return (
     <div id="quiz_module_root" className="space-y-6">
       
-      {/* 1. QUIZ TAKER INTERFACE (STUDENT - FULL EXAM ATMOSPHERE OVERLAY) */}
+      {/* QUIZ TAKER INTERFACE - Keep existing */}
       {activeQuiz && (
         <div className="bg-white p-6 rounded-2xl border border-slate-105 shadow-md max-w-4xl mx-auto">
-          
-          {/* Header Status Bar with running Countdown Clock */}
           <div className="pb-4 mb-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="text-xs bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full font-bold uppercase tracking-wider">{activeQuiz.subject}</span>
               <h3 className="text-lg font-black text-slate-800 mt-1.5 leading-tight">{activeQuiz.title}</h3>
             </div>
 
-            {/* Countdown Clock (Highlights Red if < 1.5 minutes) */}
             {!completedAttempt && (
               <div className={`p-3 rounded-xl flex items-center gap-2 border font-mono text-base font-extrabold ${
                 timeRemaining < 90
@@ -238,11 +277,8 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
             )}
           </div>
 
-          {/* QUIZ ACTIVE SCREEN */}
           {!completedAttempt ? (
             <div className="space-y-6">
-              
-              {/* Question Navigation Rail */}
               <div className="flex flex-wrap items-center gap-1.5">
                 {quizQuestions.map((_, idx) => (
                   <button
@@ -261,7 +297,6 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
                 ))}
               </div>
 
-              {/* Active Question Panel */}
               <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                 <div className="flex gap-2.5">
                   <span className="text-xs bg-indigo-600 text-white font-black px-2 py-0.5 rounded h-fit">Q-{currentQuestionIndex + 1}</span>
@@ -270,7 +305,6 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
                   </p>
                 </div>
 
-                {/* Option MCQs choices list */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-6">
                   {['A', 'B', 'C', 'D'].map((opt) => {
                     const fieldKey = `option_${opt.toLowerCase()}` as keyof QuizQuestion;
@@ -303,7 +337,6 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
                 </div>
               </div>
 
-              {/* Controls bar */}
               <div className="flex items-center justify-between border-t border-slate-50 pt-5 mt-6">
                 <button
                   type="button"
@@ -336,10 +369,8 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
                   )}
                 </div>
               </div>
-
             </div>
           ) : (
-            /* SUBMISSION / EVALUATION SHEET RESULT CARD */
             <div className="text-center py-8 space-y-6">
               <div className="max-w-md mx-auto bg-slate-50 p-6 rounded-2xl border border-slate-100">
                 <Trophy size={48} className="text-amber-500 mx-auto mb-3" />
@@ -360,7 +391,6 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
                 </div>
               </div>
 
-              {/* Individual Question Correction Key */}
               <div className="max-w-2xl mx-auto space-y-3.5 text-left pt-6">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <ListCollapse size={14} /> Comprehensive Correction Keys
@@ -405,185 +435,202 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
                   Return to Quizzes Dashboard
                 </button>
               </div>
-
             </div>
           )}
-
         </div>
       )}
 
-      {/* 2. MAIN REGULAR DASHBOARD VIEW (QUIZ PUBLISHED SHEEETS LIST) */}
+      {/* MAIN QUIZ DASHBOARD */}
       {!activeQuiz && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
           
-          {/* TEACHER CREATOR COLUMN */}
+          {/* TEACHER CREATOR - SPLIT LAYOUT */}
           {isTeacher && (
-            <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm h-fit space-y-4">
-              <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                <Plus size={20} className="text-indigo-600" />
-                Build Interactive Pop Quiz
-              </h3>
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100">
+                <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                  <Plus size={20} className="text-indigo-600" />
+                  Build Interactive Pop Quiz
+                </h3>
+              </div>
 
-              <form onSubmit={handleCreateNewQuiz} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Classroom Assignment</label>
-                  <select
-                    value={targetClassId}
-                    onChange={(e) => setTargetClassId(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-750 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                  >
-                    {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
-                  </select>
-                </div>
+              <form onSubmit={handleCreateNewQuiz}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+                  
+                  {/* LEFT COLUMN - Basic Info */}
+                  <div className="p-6 space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Classroom Assignment</label>
+                      <select
+                        value={targetClassId}
+                        onChange={(e) => setTargetClassId(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-750 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      >
+                        {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
+                      </select>
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Subject Category</label>
-                  <select
-                    value={quizSubject}
-                    onChange={(e) => setQuizSubject(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-750 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                  >
-                    {['Mathematics', 'Chemistry', 'Physics', 'English', 'History', 'Biology', 'General'].map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Subject Category</label>
+                      <select
+                        value={quizSubject}
+                        onChange={(e) => setQuizSubject(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-750 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      >
+                        {['Mathematics', 'Chemistry', 'Physics', 'English', 'History', 'Biology', 'General'].map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Quiz Title</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Organic Chemistry Naming Rules"
-                    value={quizTitle}
-                    onChange={(e) => setQuizTitle(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-750 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                  />
-                </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Quiz Title</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Organic Chemistry Naming Rules"
+                        value={quizTitle}
+                        onChange={(e) => setQuizTitle(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-750 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 font-sans">Completeness Cap (Duration in Mins)</label>
-                  <input
-                    type="number"
-                    required
-                    min={5}
-                    max={120}
-                    value={quizDuration}
-                    onChange={(e) => setQuizDuration(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-750 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono"
-                  />
-                </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Duration (Minutes)</label>
+                      <input
+                        type="number"
+                        required
+                        min={1}
+                        max={120}
+                        value={quizDuration}
+                        onChange={(e) => setQuizDuration(Number(e.target.value))}
+                        className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-750 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono"
+                      />
+                    </div>
 
-                {/* DYNAMIC MCQ BUILDER ROWS */}
-                <div className="space-y-3 pt-3 border-t border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                      <HelpCircle size={13} />
-                      Sequence Questions ({questionsCreator.length})
-                    </span>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                        <Calendar size={14} className="inline mr-1" />
+                        Quiz Deadline
+                      </label>
+                      <input
+                        type="datetime-local"
+                        required
+                        value={quizDeadline}
+                        onChange={(e) => setQuizDeadline(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-750 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">Students cannot attempt after this date/time</p>
+                    </div>
+                  </div>
+
+                  {/* RIGHT COLUMN - Questions */}
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                        <HelpCircle size={13} />
+                        Sequence Questions ({questionsCreator.length})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleAddQuestionField}
+                        className="text-xs text-indigo-600 font-bold hover:underline cursor-pointer"
+                      >
+                        + Add Question
+                      </button>
+                    </div>
+
+                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                      {questionsCreator.map((q, idx) => (
+                        <div key={idx} className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm space-y-3 relative">
+                          {questionsCreator.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveQuestionField(idx)}
+                              className="absolute top-2 right-2 text-slate-400 hover:text-red-500 transition p-1"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">Question #{idx + 1}</span>
+                          </div>
+                          
+                          <div>
+                            <input
+                              type="text"
+                              required
+                              placeholder="Write your question here..."
+                              value={q.question}
+                              onChange={(e) => handleQuestionFieldChange(idx, 'question', e.target.value)}
+                              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {['A', 'B', 'C', 'D'].map((opt) => {
+                              const fieldKey = `option_${opt.toLowerCase()}` as keyof Omit<QuizQuestion, 'id' | 'quiz_id'>;
+                              const value = q[fieldKey] as string;
+                              
+                              return (
+                                <div key={opt} className="flex items-center gap-2">
+                                  <span className="text-xs font-bold text-slate-500 w-5">{opt}.</span>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder={`Option ${opt}`}
+                                    value={value}
+                                    onChange={(e) => handleQuestionFieldChange(idx, fieldKey, e.target.value)}
+                                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-500 mb-1.5">Correct Answer</label>
+                            <div className="flex gap-2">
+                              {['A', 'B', 'C', 'D'].map((opt) => (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  onClick={() => handleCorrectAnswerSelect(idx, opt as 'A' | 'B' | 'C' | 'D')}
+                                  className={`px-4 py-2 rounded-lg text-sm font-bold transition border-2 ${
+                                    q.correct_answer === opt
+                                      ? 'bg-indigo-600 text-white border-indigo-600'
+                                      : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50'
+                                  }`}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {creatingSuccess && (
+                      <div className="bg-emerald-50 text-emerald-800 p-2.5 border border-emerald-100 rounded-lg text-xs font-semibold flex items-center gap-1 leading-snug">
+                        <Sparkles size={14} className="text-emerald-500 shrink-0" /> MCQ quiz published and pushed to students!
+                      </div>
+                    )}
+
                     <button
-                      type="button"
-                      onClick={handleAddQuestionField}
-                      className="text-xs text-indigo-600 font-bold hover:underline cursor-pointer"
+                      type="submit"
+                      id="submit_quiz_btn"
+                      className="w-full py-3 bg-indigo-650 text-white hover:bg-indigo-700 font-bold rounded-lg text-sm transition cursor-pointer"
                     >
-                      + Add Question
+                      Generate & Publish Quiz
                     </button>
                   </div>
-
-                  <div className="space-y-4 max-h-[360px] overflow-y-auto pr-1">
-                    {questionsCreator.map((q, idx) => (
-                      <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-100 outline outline-1 outline-slate-200/50 space-y-2 text-xs relative">
-                        {questionsCreator.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveQuestionField(idx)}
-                            className="absolute top-2 right-2 text-slate-450 hover:text-red-500 font-bold cursor-pointer"
-                          >
-                            Remove
-                          </button>
-                        )}
-                        <p className="font-bold text-slate-500 uppercase tracking-wider">Item #{idx + 1}</p>
-                        
-                        <input
-                          type="text"
-                          required
-                          placeholder="Write question..."
-                          value={q.question}
-                          onChange={(e) => handleQuestionFieldChange(idx, 'question', e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded text-slate-850"
-                        />
-                        
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <input
-                            type="text"
-                            required
-                            placeholder="Option A"
-                            value={q.option_a}
-                            onChange={(e) => handleQuestionFieldChange(idx, 'option_a', e.target.value)}
-                            className="px-2 py-1 bg-white border border-slate-200 rounded text-[11px]"
-                          />
-                          <input
-                            type="text"
-                            required
-                            placeholder="Option B"
-                            value={q.option_b}
-                            onChange={(e) => handleQuestionFieldChange(idx, 'option_b', e.target.value)}
-                            className="px-2 py-1 bg-white border border-slate-200 rounded text-[11px]"
-                          />
-                          <input
-                            type="text"
-                            required
-                            placeholder="Option C"
-                            value={q.option_c}
-                            onChange={(e) => handleQuestionFieldChange(idx, 'option_c', e.target.value)}
-                            className="px-2 py-1 bg-white border border-slate-200 rounded text-[11px]"
-                          />
-                          <input
-                            type="text"
-                            required
-                            placeholder="Option D"
-                            value={q.option_d}
-                            onChange={(e) => handleQuestionFieldChange(idx, 'option_d', e.target.value)}
-                            className="px-2 py-1 bg-white border border-slate-200 rounded text-[11px]"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 mb-1">CORRECT RESPONSE</label>
-                          <select
-                            value={q.correct_answer}
-                            onChange={(e) => handleQuestionFieldChange(idx, 'correct_answer', e.target.value)}
-                            className="px-2 py-1 bg-white border border-slate-200 rounded text-[11px]"
-                          >
-                            <option value="A">Choice A</option>
-                            <option value="B">Choice B</option>
-                            <option value="C">Choice C</option>
-                            <option value="D">Choice D</option>
-                          </select>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
-
-                {creatingSuccess && (
-                  <div className="bg-emerald-50 text-emerald-800 p-2.5 border border-emerald-100 rounded-lg text-xs font-semibold flex items-center gap-1 leading-snug">
-                    <Sparkles size={14} className="text-emerald-500 shrink-0" /> MCQ quiz published and pushed to students!
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  id="submit_quiz_btn"
-                  className="w-full py-2.5 bg-indigo-650 text-white hover:bg-indigo-700 font-bold rounded-xl text-sm transition cursor-pointer"
-                >
-                  Generate & Publish Quiz
-                </button>
               </form>
             </div>
           )}
 
-          {/* LIST OF EXAMS AVAILABLE CONTAINER */}
-          <div className={isTeacher ? 'lg:col-span-2 space-y-4' : 'lg:col-span-3 space-y-4'}>
-            
+          {/* QUIZ LIST */}
+          <div className="space-y-4">
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
               <span className="text-xs text-slate-500 font-extrabold uppercase tracking-wider">Evaluation Boards</span>
               <span className="text-xs text-indigo-700 font-bold">{quizzes.length} Exercises Published</span>
@@ -601,45 +648,73 @@ export default function QuizModule({ currentUser }: QuizModuleProps) {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {quizzes.map((q) => (
-                  <div
-                    key={q.id}
-                    className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs hover:border-indigo-150 transition hover:shadow-sm flex flex-col justify-between"
-                  >
-                    <div>
-                      <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full uppercase tracking-wide">
-                        {q.subject}
-                      </span>
-                      <h4 className="text-base font-bold text-slate-800 mt-2 tracking-tight leading-snug">{q.title}</h4>
-                      <p className="text-xs font-semibold text-slate-400 mt-1 flex items-center gap-1.5">
-                        <Clock size={13} />
-                        Duration: {q.duration_minutes} minutes
-                      </p>
-                    </div>
+                {quizzes.map((q) => {
+                  const isExpired = isQuizExpired(q);
+                  const isAttempted = attemptedQuizzes.has(q.id);
+                  const canAttempt = !isExpired && !isAttempted && !isTeacher;
 
-                    <div className="mt-5 pt-3 border-t border-slate-100/70 flex items-center justify-between">
-                      <span className="text-xs text-slate-400 font-medium">Auto graded MCQ</span>
-                      {!isTeacher ? (
-                        <button
-                          type="button"
-                          onClick={() => startQuiz(q)}
-                          className="bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer"
-                        >
-                          <Play size={11} strokeWidth={3} /> Start Quiz
-                        </button>
-                      ) : (
-                        <span className="text-xs text-slate-400 font-bold italic">Active</span>
-                      )}
+                  return (
+                    <div
+                      key={q.id}
+                      className={`bg-white p-5 rounded-2xl border shadow-xs transition flex flex-col justify-between ${
+                        isExpired ? 'border-red-200 bg-red-50/30' :
+                        isAttempted ? 'border-green-200 bg-green-50/30' :
+                        'border-slate-100 hover:border-indigo-150 hover:shadow-sm'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            {q.subject}
+                          </span>
+                          {isExpired && (
+                            <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Expired</span>
+                          )}
+                          {isAttempted && !isTeacher && (
+                            <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">Attempted ✓</span>
+                          )}
+                        </div>
+                        <h4 className="text-base font-bold text-slate-800 mt-2 tracking-tight leading-snug">{q.title}</h4>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 font-medium">
+                          <span className="flex items-center gap-1">
+                            <Clock size={13} />
+                            Duration: {q.duration_minutes} min
+                          </span>
+                          {q.deadline && (
+                            <span className="flex items-center gap-1">
+                              <Calendar size={13} />
+                              Due: {new Date(q.deadline).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-5 pt-3 border-t border-slate-100/70 flex items-center justify-between">
+                        <span className="text-xs text-slate-400 font-medium">Auto graded MCQ</span>
+                        {!isTeacher && (
+                          <button
+                            type="button"
+                            onClick={() => startQuiz(q)}
+                            disabled={!canAttempt}
+                            className={`text-xs font-bold px-4 py-1.5 rounded-lg flex items-center gap-1 transition ${
+                              canAttempt
+                                ? 'bg-indigo-650 hover:bg-indigo-700 text-white cursor-pointer'
+                                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            }`}
+                          >
+                            <Play size={11} strokeWidth={3} />
+                            {isExpired ? 'Expired' : isAttempted ? 'Done' : 'Start Quiz'}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
-
         </div>
       )}
-
     </div>
   );
 }
