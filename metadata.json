@@ -1,0 +1,6 @@
+{
+  "name": "Student Learning Tracker",
+  "description": "A comprehensive production-ready platform for students and teachers to manage tasks, assignments, attendance, quizzes, notifications, and performance analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
