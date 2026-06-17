@@ -1,7 +1,12 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import React, { useState } from 'react';
 import { dbService } from '../services/db';
 import { Profile } from '../types';
-import { BookOpen, Key, Mail, Sparkles, User, AlertCircle } from 'lucide-react';
+import { BookOpen, Key, Mail, AlertCircle } from 'lucide-react';
 
 interface LoginProps {
   onSuccess: (profile: Profile) => void;
@@ -29,21 +34,6 @@ export default function Login({ onSuccess }: LoginProps) {
     }
   };
 
-  // Quick bypass for grading & testing (Amazing developer feature)
-  const handleQuickBypass = async (role: 'student' | 'teacher') => {
-    try {
-      setLoading(true);
-      setErrorMsg('');
-      const targetEmail = role === 'student' ? 'alex@school.com' : 'jenkins@school.com';
-      const profile = await dbService.login(targetEmail, 'password123');
-      onSuccess(profile);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Bypass failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div id="login_screen_root" className="min-y-screen flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
       
@@ -51,10 +41,10 @@ export default function Login({ onSuccess }: LoginProps) {
         
         {/* Logo / Header Branding */}
         <div className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 bg-gradient-to-tr from-indigo-900 via-indigo-950 to-slate-900 text-white rounded-2xl flex items-center justify-center font-bold border border-slate-100">
-            <BookOpen size={22} />
+          <div className="mx-auto w-14 h-14 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl flex items-center justify-center font-bold shadow-lg">
+            <BookOpen size={26} />
           </div>
-          <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">Student Learning Tracker</h2>
+          <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">ProgressHub</h2>
           <p className="text-xs text-slate-500 font-medium leading-relaxed">
             Enter your school credentials to access your learning dashboard.
           </p>
@@ -74,7 +64,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 placeholder="e.g. alex@school.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
               />
             </div>
           </div>
@@ -91,7 +81,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
               />
             </div>
           </div>
@@ -107,7 +97,7 @@ export default function Login({ onSuccess }: LoginProps) {
             type="submit"
             id="login_btn"
             disabled={loading}
-            className="w-full py-2.5 px-4 bg-indigo-650 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-md transition disabled:opacity-50 cursor-pointer"
+            className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-md transition disabled:opacity-50 cursor-pointer"
           >
             {loading ? 'Authenticating...' : 'Sign In To Account'}
           </button>
@@ -123,30 +113,7 @@ export default function Login({ onSuccess }: LoginProps) {
           </p>
         </div>
 
-        {/* DEMO BYPASS COMPARTMENT (Critical sandbox quality element) */}
-        <div className="border-t border-slate-100 pt-5 space-y-3.0">
-          <span className="block text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-1">
-            <Sparkles size={11} className="text-amber-500" />
-            Sandbox Quick Access Accounts (Bypasses)
-          </span>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => handleQuickBypass('student')}
-              className="py-2.5 px-3 border border-indigo-100 bg-indigo-50/20 hover:bg-indigo-50 hover:border-indigo-200 rounded-xl text-xs font-bold text-indigo-700 transition flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <User size={13} />
-              Alex Student
-            </button>
-            <button
-              onClick={() => handleQuickBypass('teacher')}
-              className="py-2.5 px-3 border border-emerald-100 bg-emerald-50/20 hover:bg-emerald-50 hover:border-emerald-200 rounded-xl text-xs font-bold text-emerald-700 transition flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <User size={13} />
-              Dr. Jenkins Teacher
-            </button>
-          </div>
-        </div>
+        {/* REMOVED: Sandbox Quick Access Accounts section */}
 
       </div>
 

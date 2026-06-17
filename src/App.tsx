@@ -176,7 +176,7 @@ export default function App() {
         
         {/* Simple visual sandbox copyright/banner at the bottom */}
         <footer className="text-center py-6 text-xs text-slate-400 font-medium border-t border-slate-100/50 bg-white">
-          <span>Student Learning Tracker Applet • Powered by Supabase & React</span>
+          <span>ProgressHub • Powered by Supabase & React</span>
         </footer>
       </div>
     );
@@ -193,7 +193,7 @@ export default function App() {
           <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold">
             <BookOpen size={16} />
           </div>
-          <span className="text-lg font-black text-slate-800 tracking-tight">LearningTracker</span>
+          <span className="text-lg font-black text-slate-800 tracking-tight">ProgressHub</span>
         </div>
 
         {/* User badge row - Fixed */}
@@ -264,7 +264,7 @@ export default function App() {
                   <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold">
                     <BookOpen size={16} />
                   </div>
-                  <span className="text-lg font-black text-slate-800 tracking-tight">LearningTracker</span>
+                  <span className="text-lg font-black text-slate-800 tracking-tight">ProgressHub</span>
                 </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
