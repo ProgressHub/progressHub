@@ -246,19 +246,100 @@ export default function App() {
         </div>
       </aside>
 
-      {/* 2. MOBILE HEADER & NAVIGATION DRAWER */}
+      {/* 2. MOBILE - OVERLAY WITH SLIDE-IN SIDEBAR */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          
+          {/* Slide-in sidebar */}
+          <div className="lg:hidden fixed top-0 left-0 h-full w-72 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out">
+            <div className="flex flex-col h-full">
+              {/* Close button */}
+              <div className="flex justify-between items-center p-4 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold">
+                    <BookOpen size={16} />
+                  </div>
+                  <span className="text-lg font-black text-slate-800 tracking-tight">LearningTracker</span>
+                </div>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 rounded-lg hover:bg-slate-100 transition"
+                >
+                  <X size={20} className="text-slate-600" />
+                </button>
+              </div>
+
+              {/* User badge */}
+              <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold uppercase text-sm border border-indigo-100">
+                  {currentUser.full_name.substr(0, 2)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-bold text-slate-800 truncate leading-none">{currentUser.full_name}</h4>
+                  <span className={`inline-block mt-1 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded leading-none ${
+                    currentUser.role === 'student' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'
+                  }`}>
+                    {currentUser.role}
+                  </span>
+                </div>
+              </div>
+
+              {/* Navigation items */}
+              <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+                {navItems.map((item) => {
+                  const IconComp = item.icon;
+                  const isSelected = activeTab === item.id;
+                  
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleTabClick(item.id)}
+                      className={`w-full flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-semibold transition ${
+                        isSelected
+                          ? 'bg-indigo-50 text-indigo-700'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <IconComp size={18} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Logout button */}
+              <div className="p-4 border-t border-slate-100 shrink-0">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-200 transition-all font-semibold text-sm"
+                >
+                  <LogOut size={18} />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 3. MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0">
         
-        {/* Upper Top Navbar for headers (Both desktop/mobile) */}
+        {/* Upper Top Navbar for headers */}
         <header className="bg-white border-b border-slate-150 h-16 flex items-center justify-between px-6 z-30 select-none shrink-0 sticky top-0">
           
           {/* Mobile hamburger selector */}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 lg:hidden transition"
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 lg:hidden transition"
             >
-              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              <Menu size={20} />
             </button>
             <h1 className="text-sm font-black text-slate-800 lg:text-base capitalize">
               {activeTab === 'dashboard' ? 'Overview Dashboard' : activeTab.replace('_', ' ')}
@@ -276,9 +357,9 @@ export default function App() {
                   : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
               }`}
             >
-              <Bell size={16} />
+              <Bell size={18} />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center">
                   {unreadCount}
                 </span>
               )}
@@ -292,44 +373,7 @@ export default function App() {
           </div>
         </header>
 
-        {/* Mobile menu modal dropdown panel */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden bg-white text-slate-700 border-b border-slate-200 z-40 select-none">
-            <nav className="p-4 space-y-1">
-              {navItems.map((item) => {
-                const IconComp = item.icon;
-                const isSelected = activeTab === item.id;
-                
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleTabClick(item.id)}
-                    className={`w-full flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-semibold transition ${
-                      isSelected
-                        ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                    }`}
-                  >
-                    <IconComp size={18} />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-              
-              <div className="border-t border-slate-200 pt-3 mt-3">
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition"
-                >
-                  <LogOut size={18} />
-                  <span>Log Out</span>
-                </button>
-              </div>
-            </nav>
-          </div>
-        )}
-
-        {/* 3. CORE ROUTER ACTIVE RENDER WORKBENCH PANEL */}
+        {/* 4. CORE ROUTER ACTIVE RENDER WORKBENCH PANEL */}
         <main className="flex-1 p-6 overflow-y-auto max-w-7xl mx-auto w-full">
           {renderActiveModule()}
         </main>
