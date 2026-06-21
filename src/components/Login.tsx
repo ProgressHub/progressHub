@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { dbService } from '../services/db';
 import { Profile } from '../types';
-import { BookOpen, Key, Mail, AlertCircle } from 'lucide-react';
+import { BookOpen, Key, Mail, AlertCircle, User, GraduationCap } from 'lucide-react';
 
 interface LoginProps {
   onSuccess: (profile: Profile) => void;
@@ -32,6 +32,12 @@ export default function Login({ onSuccess }: LoginProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fillTestAccount = (email: string, password: string) => {
+    setEmail(email);
+    setPassword(password);
+    setErrorMsg('');
   };
 
   return (
@@ -103,6 +109,65 @@ export default function Login({ onSuccess }: LoginProps) {
           </button>
         </form>
 
+        {/* Test Accounts Section - Always Visible */}
+        <div className="border-t border-slate-100 pt-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <User size={14} className="text-slate-400" />
+            <p className="text-xs font-semibold text-slate-500">Demo Test Accounts</p>
+            <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">
+              Try Now
+            </span>
+          </div>
+          
+          <p className="text-[11px] text-slate-400 text-center mb-3">
+            Click any test account to auto-fill credentials
+          </p>
+          
+          <div className="space-y-2">
+            {/* Student Account */}
+            <div 
+              onClick={() => fillTestAccount('amaresh@school.com', 'amaresh')}
+              className="flex items-center justify-between p-2.5 bg-indigo-50 hover:bg-indigo-100 rounded-xl cursor-pointer transition border border-indigo-100"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-indigo-200 flex items-center justify-center text-indigo-700">
+                  <GraduationCap size={15} />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-semibold text-slate-700">Student Demo</p>
+                  <p className="text-[10px] text-slate-500">amaresh@school.com</p>
+                </div>
+              </div>
+              <div className="text-[10px] text-indigo-600 font-mono bg-white px-2 py-0.5 rounded border border-indigo-200">
+                pass: amaresh
+              </div>
+            </div>
+
+            {/* Teacher/Admin Account */}
+            <div 
+              onClick={() => fillTestAccount('aruna@gmail.com', 'aruna')}
+              className="flex items-center justify-between p-2.5 bg-emerald-50 hover:bg-emerald-100 rounded-xl cursor-pointer transition border border-emerald-100"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-700">
+                  <User size={15} />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-semibold text-slate-700">Teacher Demo</p>
+                  <p className="text-[10px] text-slate-500">aruna@gmail.com</p>
+                </div>
+              </div>
+              <div className="text-[10px] text-emerald-600 font-mono bg-white px-2 py-0.5 rounded border border-emerald-200">
+                pass: aruna
+              </div>
+            </div>
+          </div>
+
+          <p className="text-[10px] text-slate-400 text-center mt-3">
+            ⚡ These are demo accounts for preview purposes only
+          </p>
+        </div>
+
         {/* Help text - no registration link */}
         <div className="text-center pt-2 border-t border-slate-100">
           <p className="text-xs text-slate-400 font-medium">
@@ -112,8 +177,6 @@ export default function Login({ onSuccess }: LoginProps) {
             Contact your teacher if you need access.
           </p>
         </div>
-
-        {/* REMOVED: Sandbox Quick Access Accounts section */}
 
       </div>
 
